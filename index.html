@@ -1,0 +1,253 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans)}
+@keyframes pulse-ring{0%{transform:scale(0.8);opacity:1}100%{transform:scale(2.2);opacity:0}}
+@keyframes scan-line{0%{top:0;opacity:1}100%{top:100%;opacity:0}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes bar-grow{from{width:0}to{width:var(--w)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes count-up{from{opacity:0}to{opacity:1}}
+.page{background:#0a1628;min-height:600px;padding:0 0 40px;border-radius:12px;overflow:hidden}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;border-bottom:1px solid rgba(255,255,255,0.07)}
+.logo{font-size:15px;font-weight:500;color:#fff;letter-spacing:0.3px}
+.logo span{color:#0d9488}
+.badge{font-size:11px;padding:3px 10px;border-radius:20px;background:rgba(13,148,136,0.15);color:#5DCAA5;border:1px solid rgba(13,148,136,0.3)}
+.hero{padding:32px 24px 24px;text-align:center}
+.hero h1{font-size:26px;font-weight:500;color:#fff;margin-bottom:8px}
+.hero p{font-size:13px;color:rgba(255,255,255,0.45);max-width:400px;margin:0 auto}
+.card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:20px 24px;margin:0 20px 16px}
+.card-title{font-size:12px;font-weight:500;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:16px}
+.slider-row{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.slider-label{font-size:12px;color:rgba(255,255,255,0.6);width:160px;flex-shrink:0}
+.slider-row input[type=range]{flex:1;-webkit-appearance:none;height:3px;background:rgba(255,255,255,0.1);border-radius:2px;outline:none}
+.slider-row input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#0d9488;cursor:pointer;border:2px solid #0a1628;transition:transform 0.15s}
+.slider-row input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.2)}
+.slider-val{font-size:12px;font-weight:500;color:#5DCAA5;min-width:44px;text-align:right}
+.analyze-btn{width:100%;padding:14px;background:#0d9488;border:none;border-radius:8px;color:#fff;font-size:14px;font-weight:500;cursor:pointer;transition:background 0.2s,transform 0.1s;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:6px}
+.analyze-btn:hover{background:#0f6e56}
+.analyze-btn:active{transform:scale(0.98)}
+.analyze-btn.loading{background:#0f6e56;pointer-events:none}
+.spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite}
+.result-section{animation:fadeUp 0.5s ease both}
+.result-badge{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;border-radius:12px;margin-bottom:0;position:relative;overflow:hidden}
+.result-badge.benign{background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.25)}
+.result-badge.malignant{background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.25)}
+.pulse-ring{position:absolute;width:60px;height:60px;border-radius:50%;border:2px solid;animation:pulse-ring 1.8s ease-out infinite}
+.result-badge.benign .pulse-ring{border-color:rgba(16,185,129,0.4)}
+.result-badge.malignant .pulse-ring{border-color:rgba(239,68,68,0.4)}
+.result-label{font-size:22px;font-weight:500;color:#fff;position:relative;z-index:1}
+.result-badge.benign .result-label{color:#6ee7b7}
+.result-badge.malignant .result-label{color:#fca5a5}
+.confidence-val{font-size:13px;color:rgba(255,255,255,0.5);margin-top:4px;position:relative;z-index:1}
+.results-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:0 20px 16px}
+.shap-card{margin:0 20px 16px}
+.shap-row{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.shap-feat{font-size:11px;color:rgba(255,255,255,0.5);width:140px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.shap-bar-track{flex:1;height:6px;background:rgba(255,255,255,0.07);border-radius:3px;overflow:hidden;position:relative}
+.shap-bar{height:100%;border-radius:3px;animation:bar-grow 0.6s ease both;animation-delay:var(--delay)}
+.shap-bar.pos{background:#f87171}
+.shap-bar.neg{background:#5DCAA5;margin-left:auto}
+.shap-val{font-size:11px;min-width:36px;text-align:right}
+.scan-container{position:relative;height:3px;background:rgba(13,148,136,0.15);border-radius:2px;margin:12px 0;overflow:hidden}
+.scan-line{position:absolute;left:0;right:0;height:100%;background:linear-gradient(90deg,transparent,#0d9488,transparent);animation:scan-line 1.5s ease-in-out infinite}
+.disclaimer{font-size:11px;color:rgba(255,255,255,0.25);text-align:center;padding:0 24px;line-height:1.5}
+.stat-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:0 20px 16px}
+.stat-box{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:12px;text-align:center}
+.stat-num{font-size:18px;font-weight:500;color:#5DCAA5}
+.stat-lbl{font-size:10px;color:rgba(255,255,255,0.35);margin-top:2px;text-transform:uppercase;letter-spacing:0.5px}
+</style>
+
+<div class="page">
+  <div class="topbar">
+    <div class="logo">Cancer<span>Scan</span> AI</div>
+    <div class="badge">Random Forest + SHAP</div>
+  </div>
+
+  <div class="hero">
+    <h1>Tumor analysis</h1>
+    <p>Adjust measurements below and analyze. The model explains every prediction with SHAP feature attribution.</p>
+  </div>
+
+  <div class="stat-row">
+    <div class="stat-box"><div class="stat-num">97.2%</div><div class="stat-lbl">Accuracy</div></div>
+    <div class="stat-box"><div class="stat-num">569</div><div class="stat-lbl">Training cases</div></div>
+    <div class="stat-box"><div class="stat-num">5</div><div class="stat-lbl">Key features</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Tumor measurements</div>
+
+    <div class="slider-row">
+      <span class="slider-label">Concave points worst</span>
+      <input type="range" min="0" max="0.3" step="0.001" value="0.12" id="s1" oninput="updateSlider('s1','v1')">
+      <span class="slider-val" id="v1">0.120</span>
+    </div>
+    <div class="slider-row">
+      <span class="slider-label">Perimeter worst</span>
+      <input type="range" min="50" max="250" step="0.1" value="120" id="s2" oninput="updateSlider('s2','v2')">
+      <span class="slider-val" id="v2">120.0</span>
+    </div>
+    <div class="slider-row">
+      <span class="slider-label">Concave points mean</span>
+      <input type="range" min="0" max="0.2" step="0.001" value="0.07" id="s3" oninput="updateSlider('s3','v3')">
+      <span class="slider-val" id="v3">0.070</span>
+    </div>
+    <div class="slider-row">
+      <span class="slider-label">Radius worst</span>
+      <input type="range" min="7" max="36" step="0.1" value="16" id="s4" oninput="updateSlider('s4','v4')">
+      <span class="slider-val" id="v4">16.0</span>
+    </div>
+    <div class="slider-row">
+      <span class="slider-label">Area worst</span>
+      <input type="range" min="185" max="4250" step="1" value="900" id="s5" oninput="updateSlider('s5','v5')">
+      <span class="slider-val" id="v5">900</span>
+    </div>
+
+    <button class="analyze-btn" id="analyzeBtn" onclick="analyze()">
+      <span id="btnText">Analyze tumor</span>
+    </button>
+  </div>
+
+  <div id="resultsArea"></div>
+
+  <div class="disclaimer">For research purposes only. Always consult a qualified medical professional.</div>
+</div>
+
+<script>
+function updateSlider(sid, vid) {
+  const val = parseFloat(document.getElementById(sid).value);
+  const decimals = val < 1 ? 3 : val < 100 ? 1 : 0;
+  document.getElementById(vid).textContent = val.toFixed(decimals);
+}
+
+function getInputs() {
+  return {
+    s1: parseFloat(document.getElementById('s1').value),
+    s2: parseFloat(document.getElementById('s2').value),
+    s3: parseFloat(document.getElementById('s3').value),
+    s4: parseFloat(document.getElementById('s4').value),
+    s5: parseFloat(document.getElementById('s5').value),
+  };
+}
+
+function mockPredict(inputs) {
+  const score =
+    inputs.s1 * 8.2 +
+    inputs.s2 * 0.018 +
+    inputs.s3 * 6.5 +
+    inputs.s4 * 0.04 +
+    inputs.s5 * 0.00045 - 1.6;
+  const prob = 1 / (1 + Math.exp(-score));
+  const isMalignant = prob > 0.5;
+
+  const names = ['Concave pts worst','Perimeter worst','Concave pts mean','Radius worst','Area worst'];
+  const weights = [inputs.s1*8.2, inputs.s2*0.018, inputs.s3*6.5, inputs.s4*0.04, inputs.s5*0.00045];
+  const base = -1.6;
+  const total = weights.reduce((a,b)=>a+b,0) + base;
+  const shapVals = weights.map(w => +(w / Math.abs(total) * (isMalignant ? 1 : -1) * 0.6).toFixed(3));
+
+  return {
+    label: isMalignant ? 'Malignant' : 'Benign',
+    isMalignant,
+    confidence: Math.round(Math.max(prob, 1-prob) * 1000) / 10,
+    shap: names.map((n,i) => ({name: n, val: shapVals[i]})).sort((a,b)=>Math.abs(b.val)-Math.abs(a.val))
+  };
+}
+
+function analyze() {
+const API = 'https://your-app.onrender.com'; // update after deploy
+
+async function analyze() {
+  const btn = document.getElementById('analyzeBtn');
+  btn.classList.add('loading');
+  btn.innerHTML = '<div class="spinner"></div><span>Analyzing...</span>';
+
+  const inputs = {
+    [top5[0]]: parseFloat(document.getElementById('s1').value),
+    [top5[1]]: parseFloat(document.getElementById('s2').value),
+    [top5[2]]: parseFloat(document.getElementById('s3').value),
+    [top5[3]]: parseFloat(document.getElementById('s4').value),
+    [top5[4]]: parseFloat(document.getElementById('s5').value),
+  };
+
+  try {
+    const res = await fetch(`${API}/predict`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ inputs })
+    });
+    const data = await res.json();
+
+    renderResults({
+      label: data.label,
+      isMalignant: data.prediction === 1,
+      confidence: data.confidence,
+      shap: data.shap_values.slice(0, 5)  // top 5 only for display
+    });
+  } catch (e) {
+    btn.innerHTML = '<span id="btnText">Error — check console</span>';
+    console.error(e);
+  } finally {
+    btn.classList.remove('loading');
+    btn.innerHTML = '<span id="btnText">Analyze tumor</span>';
+  }
+}
+
+// Also load real slider ranges on page load
+async function loadFeatureRanges() {
+  const res = await fetch(`${API}/features`);
+  const data = await res.json();
+  top5 = data.top5;
+  const ids = ['s1','s2','s3','s4','s5'];
+  ids.forEach((id, i) => {
+    const feat = top5[i];
+    const el = document.getElementById(id);
+    el.min = data.mins[feat];
+    el.max = data.maxs[feat];
+    el.value = data.means[feat];
+    el.step = (data.maxs[feat] - data.mins[feat]) / 100;
+  });
+}
+
+loadFeatureRanges();
+}
+
+function renderResults(r) {
+  const maxAbs = Math.max(...r.shap.map(s=>Math.abs(s.val)));
+  const shapRows = r.shap.map((s,i) => {
+    const pct = Math.round(Math.abs(s.val) / maxAbs * 100);
+    const isPos = s.val > 0;
+    const color = isPos ? '#f87171' : '#5DCAA5';
+    return `<div class="shap-row" style="animation:fadeUp 0.4s ease ${0.05*i}s both">
+      <span class="shap-feat">${s.name}</span>
+      <div class="shap-bar-track">
+        <div class="shap-bar ${isPos?'pos':'neg'}" style="--w:${pct}%;width:${pct}%;--delay:${0.1+i*0.08}s"></div>
+      </div>
+      <span class="shap-val" style="color:${color}">${s.val>0?'+':''}${s.val.toFixed(3)}</span>
+    </div>`;
+  }).join('');
+
+  document.getElementById('resultsArea').innerHTML = `
+    <div class="results-grid result-section">
+      <div class="result-badge ${r.isMalignant?'malignant':'benign'}">
+        <div class="pulse-ring"></div>
+        <div class="result-label">${r.label}</div>
+        <div class="confidence-val">${r.confidence.toFixed(1)}% confidence</div>
+      </div>
+      <div class="result-badge" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);justify-content:flex-start;gap:10px">
+        <div style="font-size:11px;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.7px">Risk level</div>
+        <div style="font-size:13px;color:rgba(255,255,255,0.6);line-height:1.5">${r.isMalignant ? 'High — further clinical investigation recommended.' : 'Low — consistent with benign tissue profile.'}</div>
+      </div>
+    </div>
+    <div class="shap-card card result-section" style="animation-delay:0.15s">
+      <div class="card-title">Why this prediction? — SHAP attribution</div>
+      <div class="scan-container"><div class="scan-line"></div></div>
+      ${shapRows}
+      <div style="display:flex;gap:16px;margin-top:12px;font-size:11px">
+        <span style="display:flex;align-items:center;gap:5px;color:rgba(255,255,255,0.4)"><span style="width:10px;height:3px;background:#f87171;border-radius:2px;display:inline-block"></span>Pushes toward malignant</span>
+        <span style="display:flex;align-items:center;gap:5px;color:rgba(255,255,255,0.4)"><span style="width:10px;height:3px;background:#5DCAA5;border-radius:2px;display:inline-block"></span>Pushes toward benign</span>
+      </div>
+    </div>`;
+}
+</script>
