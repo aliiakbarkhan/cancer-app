@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
+from fastapi.responses import FileResponse
 import joblib
 import shap
 import numpy as np
@@ -30,6 +31,11 @@ explainer = shap.TreeExplainer(model, X_train)
 
 class PredictRequest(BaseModel):
     inputs: dict
+
+
+@app.get("/app")
+def frontend():
+    return FileResponse("index.html")
 
 @app.get("/")
 def root():
